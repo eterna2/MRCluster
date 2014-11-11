@@ -77,7 +77,7 @@ function initMapTask(numHash, file, start, end) {
 		
 		var hash = hashFunction(valuepair[0]);
 		results[hash] = results[hash] || {};
-		results[hash][valuepair[0]] = reducerFunction(results[hash][valuepair[0]], valuepair[1]);
+		results[hash][valuepair[0]] = (!results[hash][valuepair[0]]) ? valuepair[1] : reducerFunction(results[hash][valuepair[0]], valuepair[1]);
 	}
 }
 
@@ -87,9 +87,9 @@ function initReduceTask(chunk) {
 
     var reduce = ctx._reducerFunction;
     var res = ctx.reduceResults = ctx.reduceResults || {};
-
+	
     for (var key in chunk) {
-        res[key] = reduce(res[key], chunk[key]);
+        res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
 
     process.nextTick(function () {

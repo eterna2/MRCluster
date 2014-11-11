@@ -1,58 +1,84 @@
 const fs = require('fs');
 
-function MapReduce(_options) {
+const _mapper = "var mapper=function(line){return [line.split(',')[0], 1];};";
+const _reducer = "var reducer=function(a, b){return b;};";
+const _post_reducer = "var post_reducer=function(chunk){var count = 0;for (var key in chunk)++count;console.log(count);return count;};";
+const _hash = "var hash=function(value){ value=value.toString(); var hash=0, i, chr, len; if (value.length==0) return hash; for (i = 0, len = value.length; i < len; i++) { chr = value.charCodeAt(i);hash = ((hash << 5) - hash) + chr; hash |= 0;  };  return Math.abs(hash%3);};";
+
+function genHashFunction(numHash)
+{
+	return "var hash=function(value){ value=value.toString(); var hash=0, i, chr, len; if (value.length==0) return hash; for (i = 0, len = value.length; i < len; i++) { chr = value.charCodeAt(i);hash = ((hash << 5) - hash) + chr; hash |= 0;  };  return Math.abs(hash%"+Math.max(1,parseInt(numHash))+");};";
+}
+
+function MapReduce() {
     var ctx = this;
 	
-	ctx._numBlocks = 1;
+	ctx._numBlocks = 2;
 	ctx._linebreak = '\n';
-	ctx._numMappers = 1;
+	ctx._numMappers = 2;
 	ctx._numReducers = 3;
-	ctx._mapper = _mapper.toString();
-	ctx._reducer = _reducer.toString();
-	ctx._hash = _hash.toString();
-	ctx._post_reduce = _post_reduce.toString();
-	ctx._aggregate_reducer = _aggregate_reducer.toString();
+	ctx._mapper = _mapper;
+	ctx._reducer = _reducer;
+	ctx._hash = _hash;
+	ctx._post_reducer = _post_reducer;
+	ctx._aggregate_reducer = _aggregate_reducer;
 	
 	ctx.file = function(file)
 	{
 		ctx._file = file;
+		return ctx;
 	};
 
 	ctx.numBlocks = function(numBlocks)
 	{
 		ctx._numBlocks = numBlocks;
+		return ctx;
 	};
 
 	ctx.lineDelimiter = function(lineDelimiter)
 	{
 		ctx._linebreak = lineDelimiter;
+		return ctx;
 	};
 
 	ctx.map = function(numMappers, func)
 	{
 		ctx._numMappers = numMappers;
-		ctx._mapper = "var mapper = "+func.toString();
+		ctx._mapper = "var mapper="+func.toString();
+		return ctx;
 	};
 
 	ctx.reduce = function(func)
 	{
-		ctx._reducer = "var reducer = "+func.toString();
+		ctx._reducer = "var reducer="+func.toString();
+		return ctx;
 	};
 	
-	ctx.hash = function(numReducers, func)
+	ctx.customhash = function(numReducers, func)
 	{
 		ctx._numReducers = numReducers;
-		ctx._hash = "var hash = "+func.toString();
+		ctx._hash = "var hash="+func.toString();
+		return ctx;
 	};
 
+	ctx.hash = function(numHash)
+	{
+		ctx._numReducers = numHash;
+		ctx._hash = genHashFunction(numHash);
+		return ctx;
+	};
+
+	
 	ctx.post_reduce = function(func)
 	{
-		ctx._post_reduce = "var post_reducer = "+func.toString();
+		ctx._post_reducer = "var post_reducer="+func.toString();
+		return ctx;
 	};
 
 	ctx.aggregate = function(func)
 	{
 		ctx._aggregate_reducer = func || _aggregate_reducer;
+		return ctx;
 	};
 
     ctx.start = function () {
@@ -166,7 +192,7 @@ function MapReduce(_options) {
 		if (reducerDone && ctx._jobsLeft == 0 && reduceJobsLeft == 0) _compileResult(ctx);
     };
 
-    return ctx.init(_options);
+    return ctx;
 };
 
 function _startMapper(ctx,id)
@@ -208,9 +234,9 @@ function _sortHash(_bin, chunk) {
 
 function _compileResult(ctx) {
 
-	ctx._answersLeft = ctx.options.numReducers;
-	ctx._answer = new Array(ctx.options.numReducers);
-	ctx._reducerState.forEach(function(d,i){ctx._cluster.workers[i+1].send({compile: ctx._post_reduce})})
+	ctx._answersLeft = ctx._numReducers;
+	ctx._answer = new Array(ctx._numReducers);
+	ctx._reducerState.forEach(function(d,i){ctx._cluster.workers[i+1].send({compile: ctx._post_reducer})})
 };
 
 function analyzeFile(filename, numBlocks, callback, linebreak) {
@@ -242,26 +268,14 @@ function analyzeFile(filename, numBlocks, callback, linebreak) {
 				end: (i + 1 >= numBlocks) ? (filesize - 1) : (array[i + 1].step - 1)
 			};
 		})
-	//console.log(jobs)
+	
+	console.log("file broken into "+numBlocks+" blocks");
+	
 	callback(jobs);
 
 
 };
 
-function _mapper(line) {
-	return [line.split(',')[0], 1];
-};
-
-function _reducer(a, b) {
-    return b;
-};
-
-function _post_reducer(chunk) {
-	var count = 0;
-	for (var key in chunk)++count;
-	console.log(count);
-	return count;
-};
 
 function _aggregate_reducer(answer) {
 	console.log(answer.reduce(function (a, b) {
@@ -270,18 +284,7 @@ function _aggregate_reducer(answer) {
 };
 
 
-function _hash(value) {
-    value += "";
-    var hash = 0,
-        i, chr, len;
-    if (value.length == 0) return hash;
-    for (i = 0, len = value.length; i < len; i++) {
-        chr = value.charCodeAt(i);
-        hash = ((hash << 5) - hash) + chr;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return Math.abs(hash%3);
-};
+
 
 // expose module methods
 exports.init = MapReduce;
