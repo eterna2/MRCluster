@@ -41,9 +41,14 @@ function MapReduce() {
 		return ctx;
 	};
 
-	ctx.map = function(numMappers, func)
+	ctx.numMappers = function(numMappers)
 	{
 		ctx._numMappers = numMappers;
+		return ctx;
+	}
+
+	ctx.map = function(func)
+	{
 		ctx._mapper = "var mapper="+func.toString();
 		return ctx;
 	};

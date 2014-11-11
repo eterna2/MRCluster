@@ -4,7 +4,8 @@ MapReduce.init()
     .file("mockdata_from_mockaroo.csv")
     .lineDelimiter('\n')
 	.numBlocks(9)
-    .map(3, function (line) {
+	.numMappers(3)
+    .map(function (line) {
         return [line.split(',')[1].split('@')[1] || 'NA', 1];
     })
     .hash(3)
