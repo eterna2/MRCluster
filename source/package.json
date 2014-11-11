@@ -1,6 +1,6 @@
 { 
 	"name" : "mrcluster",
-	"version" : "0.1",
+	"version" : "0.0.1",
 	"engines" : "0.10.28",
 	"author" :{ "name" : "William Teo",
 				"email" : "eterna2@hotmail.com",
