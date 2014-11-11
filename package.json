@@ -18,7 +18,9 @@
         "Node-MapReduce.js",
         "worker_transform_stream.js"
     ],
-	"bin" : { "mrcluster" : "./worker_transform_stream.js" }
+    "bin": {
+        "mrcluster": "./worker_transform_stream.js"
+    },
     "url": "http://github.com/eterna2/Node-MapReduce/issues",
     "email": "eterna2@hotmail.com",
     "homepage": "http://github.com/eterna2/Node-MapReduce",
