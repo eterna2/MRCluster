@@ -4,7 +4,7 @@ function MapReduce(_options) {
     var ctx = this;
 	
 	ctx._numBlocks = 1;
-	ctx._linebreak - '\n';
+	ctx._linebreak = '\n';
 	ctx._numMappers = 1;
 	ctx._numReducers = 3;
 	ctx._mapper = _mapper.toString();
