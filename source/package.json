@@ -1,0 +1,18 @@
+{ 
+	"name" : "mrcluster",
+	"version" : "0.1",
+	"engines" : "0.10.28",
+	"author" :{ "name" : "William Teo",
+				"email" : "eterna2@hotmail.com",
+				"url" : "http://www.eterna2.net"
+	},
+	"description" : "A multi-core pseudo-MapReduce implementation on NodeJS",
+	"keywords" : ["mapreduce","hadoop","cluster"],
+	"main" : "Node-MapReduce.js",
+	"files" : ["Node-MapReduce.js","worker_transform_stream.js"],
+	"url" : "http://github.com/eterna2/Node-MapReduce/issues",
+	"email" : "eterna2@hotmail.com",
+	"homepage" : "http://github.com/eterna2/Node-MapReduce",
+	"repository" :	  { "type" : "git"	  , "url" : "http://github.com/eterna2/Node-MapReduce"  },
+	"license" : "MIT"
+}
