@@ -22,7 +22,7 @@ function MapReduce(_options) {
 		
         if (ctx.cluster.isMaster) {
             ctx.cluster.setupMaster({
-                exec: "worker_transform_stream.js"
+                exec: __dirname+"/worker_transform_stream.js"
                 //silent : true
             })
             

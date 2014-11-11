@@ -1,7 +1,7 @@
 {
     "name": "mrcluster",
     "version": "0.0.1",
-    "engines": "0.10.28",
+    "engines" : { "node" : "~0.10.28" },
     "author": {
         "name": "William Teo",
         "email": "eterna2@hotmail.com",
@@ -19,7 +19,7 @@
         "worker_transform_stream.js"
     ],
     "bin": {
-        "mrcluster": "./worker_transform_stream.js"
+        "mrcluster": "worker_transform_stream.js"
     },
     "url": "http://github.com/eterna2/Node-MapReduce/issues",
     "email": "eterna2@hotmail.com",
