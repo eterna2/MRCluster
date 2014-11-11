@@ -8,6 +8,14 @@ A multi-core pseudo-MapReduce implementation on NodeJS
 npm install mrcluster
 ```
 
+### Usage
+```javascript
+var MapReduce = require("mrcluster");
+
+MapReduce.file()
+
+```
+
 ### Example 1
 A simple count of number of unique countries.
 ```javascript
