@@ -9,12 +9,12 @@ npm install mrcluster
 ```
 
 ### Usage
-##### Create a new instance
+#### Create a new instance
 ```javascript
 var mrcluster = require("mrcluster").init();
 ```
 
-##### Chaining
+#### Chaining
 The module is written to be chainable. All settings are set via function call chains. 
 ```javascript
 mrcluster
@@ -23,7 +23,7 @@ mrcluster
 	.numBlocks(9);
 ```
 
-##### Starting the MapReduce operation
+#### Starting the MapReduce operation
 ```javascript
 var mrcluster
 	.file("mockdata_from_mockaroo.csv")
