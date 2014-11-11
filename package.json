@@ -1,6 +1,6 @@
 {
     "name": "mrcluster",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "engines" : { "node" : "~0.10.28" },
     "author": {
         "name": "William Teo",
@@ -21,12 +21,12 @@
     "bin": {
         "mrcluster": "worker_transform_stream.js"
     },
-    "url": "http://github.com/eterna2/Node-MapReduce/issues",
+    "url": "http://github.com/eterna2/MRCluster/issues",
     "email": "eterna2@hotmail.com",
-    "homepage": "http://github.com/eterna2/Node-MapReduce",
+    "homepage": "http://github.com/eterna2/MRCluster",
     "repository": {
         "type": "git",
-        "url": "http://github.com/eterna2/Node-MapReduce"
+        "url": "http://github.com/eterna2/MRCluster"
     },
     "license": "MIT"
 }
