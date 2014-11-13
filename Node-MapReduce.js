@@ -146,7 +146,7 @@ function MapReduce() {
     };
 
     ctx._run = function callback(jobs) {
-		if (ctx._sample > 0) jobs = jobs.slice(0,Math.max(sample,ctx._numMappers));
+		if (ctx._sample > 0) jobs = jobs.slice(0,Math.max(ctx._sample,ctx._numMappers));
 		ctx._startTime = process.hrtime();
 		ctx._jobs = jobs;
 		ctx._jobsLeft = jobs.length;
