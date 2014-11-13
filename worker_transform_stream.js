@@ -13,6 +13,7 @@ process.on('message', function (msg) {
         })
         return;
     }
+	if (msg.write2disk) ctx.write2disk = msg.write2disk;
 	if (msg.linebreak) ctx.linebreak = msg.linebreak;
     if (msg.mapperFunction) {
         eval(msg.mapperFunction);
@@ -57,6 +58,8 @@ function initMapTask(numHash, file, start, end) {
                     mapDone: true,
                     chunk: results
                 });
+				
+		if (ctx.write2disk) fs.appendFile('Mapper_pid'process.pid+'.txt',JSON.stringify(results));
 		//console.log(results);
 	}	
 	
@@ -91,6 +94,8 @@ function initReduceTask(chunk) {
     for (var key in chunk) {
         res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
+
+	if (ctx.write2disk) fs.appendFile('Reducer_pid'process.pid+'.txt',JSON.stringify(chunk));
 
     process.nextTick(function () {
         process.send({

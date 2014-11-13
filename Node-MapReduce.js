@@ -22,6 +22,13 @@ function MapReduce() {
 	ctx._hash = _hash;
 	ctx._post_reducer = _post_reducer;
 	ctx._aggregate_reducer = _aggregate_reducer;
+	ctx._write2disk = false;
+	
+	ctx.write2disk = function(write2disk)
+	{
+		ctx._write2disk = write2disk;
+		return ctx;
+	};
 	
 	ctx.file = function(file)
 	{
@@ -112,7 +119,8 @@ function MapReduce() {
 							mapperFunction: ctx._mapper,
 							reducerFunction: ctx._reducer,
 							hashFunction: ctx._hash,
-							linebreak: ctx._linebreak
+							linebreak: ctx._linebreak,
+							write2disk: ctx._write2disk
 					});
 					ctx._activeWorkers++;  
 					if (ctx._activeWorkers >= numWorkers) analyzeFile(ctx._file, ctx._numBlocks, ctx._run, ctx._linebreak);
