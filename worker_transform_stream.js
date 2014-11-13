@@ -66,9 +66,10 @@ function initMapTask(numHash, file, start, end) {
 	function parseData(chunk)
 	{
 		var lines = chunk.split(linebreak);
-		lines[0] += lastLine;
+
+		lines[0] = lastLine + lines[0];
 		lastLine = lines.pop();
-		
+
 		lines.forEach(doMapTask);
 		
 	}

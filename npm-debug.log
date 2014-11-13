@@ -1,0 +1,22 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'G:\\PortableApps\\nodejs2\\\\node.exe',
+1 verbose cli   'G:\\PortableApps\\nodejs2\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'link',
+1 verbose cli   '.' ]
+2 info using npm@1.4.14
+3 info using node@v0.10.28
+4 verbose node symlink G:\PortableApps\nodejs2\\node.exe
+5 verbose linkPkg G:\PortableApps\GitPortable\App\Git\projects\Node-MapReduce
+6 error Error: EISDIR, symlink 'G:\PortableApps\GitPortable\App\Git\projects\Node-MapReduce'
+7 error If you need help, you may report this *entire* log,
+7 error including the npm and node versions, at:
+7 error     <http://github.com/npm/npm/issues>
+8 error System Windows_NT 6.2.9200
+9 error command "G:\\PortableApps\\nodejs2\\\\node.exe" "G:\\PortableApps\\nodejs2\\node_modules\\npm\\bin\\npm-cli.js" "link" "."
+10 error cwd G:\PortableApps\GitPortable\App\Git\projects\Node-MapReduce
+11 error node -v v0.10.28
+12 error npm -v 1.4.14
+13 error path G:\PortableApps\GitPortable\App\Git\projects\Node-MapReduce
+14 error code EISDIR
+15 error errno 28
+16 verbose exit [ 28, true ]
