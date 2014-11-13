@@ -23,6 +23,13 @@ function MapReduce() {
 	ctx._post_reducer = _post_reducer;
 	ctx._aggregate_reducer = _aggregate_reducer;
 	ctx._write2disk = false;
+	ctx._sample = -1;
+	
+	ctx.sample = function(sample)
+	{
+		ctx._sample = parseInt(sample);
+		return ctx;
+	};
 	
 	ctx.write2disk = function(write2disk)
 	{
@@ -139,6 +146,7 @@ function MapReduce() {
     };
 
     ctx._run = function callback(jobs) {
+		if (ctx._sample > 0) jobs = jobs.slice(0,Math.max(sample,ctx._numMappers));
 		ctx._startTime = process.hrtime();
 		ctx._jobs = jobs;
 		ctx._jobsLeft = jobs.length;

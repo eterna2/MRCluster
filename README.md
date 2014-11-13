@@ -49,6 +49,18 @@ Specify the number of blocks to split the file into. Default is `2`.
 mrcluster.numBlocks(9);
 ```
 
+##### Settings - sample
+Specify the number of Blocks to sample. The min number of samples must be >= number of `Mappers`. Default is `-1` (Do not sample - run everything).  
+```javascript
+mrcluster.sample(1);
+```
+
+##### Settings - write2disk
+Specify whether to write all the `Mapper` and `Reducer` outputs to file. Default is `False`.  
+```javascript
+mrcluster.write2disk(true);
+```
+
 ##### Settings - numMappers
 Specify the number of mappers to create. Default is `2`.
 ```javascript
