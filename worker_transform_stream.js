@@ -58,8 +58,12 @@ function initMapTask(numHash, file, start, end) {
                     mapDone: true,
                     chunk: results
                 });
-				
-		if (ctx.write2disk) fs.appendFile('Mapper_pid'+process.pid+'.txt',JSON.stringify(results)+"\r\n");
+		if (ctx._backdoor) 
+		{
+			ctx._backdoor();		
+		}
+		if (ctx.write2disk == "csv" || ctx.write2disk == "CSV") {};
+		else if (ctx.write2disk) fs.appendFile('Mapper_pid'+process.pid+'.txt',JSON.stringify(results)+"\r\n");
 		//console.log(results);
 	}	
 	
@@ -92,12 +96,28 @@ function initReduceTask(chunk) {
     var reduce = ctx._reducerFunction;
     var res = ctx.reduceResults = ctx.reduceResults || {};
 	
+	
     for (var key in chunk) {
         res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
 
-	if (ctx.write2disk) fs.writeFile('Reducer_pid'+process.pid+'.txt',JSON.stringify(chunk));
+	if (ctx.write2disk == "csv" || ctx.write2disk == "CSV") 
+	{
+		var array = [];
+		for (var key in res)
+		{
+			array.push(res[key]);
+		}
+		fs.writeFile('Reducer_pid'+process.pid+'.txt',array.join('\n'));
+		
+	}
+	else if (ctx.write2disk) fs.writeFile('Reducer_pid'+process.pid+'.txt',JSON.stringify(res));
 
+	if (ctx._backdoor) 
+	{
+		ctx._backdoor();		
+	}
+	
     process.nextTick(function () {
         process.send({
             reduceDone: true

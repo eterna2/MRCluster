@@ -150,6 +150,7 @@ function MapReduce() {
 		ctx._startTime = process.hrtime();
 		ctx._jobs = jobs;
 		ctx._jobsLeft = jobs.length;
+		ctx._reducJobsLeft = 0;
 		var numReducers = ctx._numReducers,
 			numMappers = ctx._numMappers;
 		ctx._reducerState = new Array(numReducers);
@@ -193,11 +194,13 @@ function MapReduce() {
         if (msg.mapDone) 
 		{
 			--ctx._jobsLeft;
+			console.log("Map Jobs Remaining: "+ctx._jobsLeft)
 			_startMapper(ctx,this.id);
 			ctx._sortHash(ctx._bin, msg.chunk);
         }
 		else if (msg.reduceDone) 
 		{
+			console.log("Reduce Jobs Remaining: "+ctx._reducJobsLeft)
 			ctx._reducerState[this.id-1] = false;
 			_startReducer(ctx,this.id-1,ctx._bin[this.id-1].pop());
         }
@@ -208,7 +211,7 @@ function MapReduce() {
 			if (!ctx._reducerState[hash]) _startReducer(ctx,hash,_bin[hash].pop());
 			reduceJobsLeft += _bin[hash].length;
 		}
-
+		ctx._reducJobsLeft = reduceJobsLeft;
 		var reducerDone = ctx._reducerState.every(function(d){return !d;});
 		if (reducerDone && ctx._jobsLeft == 0 && reduceJobsLeft == 0) _compileResult(ctx);
     };
