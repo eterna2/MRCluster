@@ -59,7 +59,7 @@ function initMapTask(numHash, file, start, end) {
                     chunk: results
                 });
 				
-		if (ctx.write2disk) fs.appendFile('Mapper_pid'process.pid+'.txt',JSON.stringify(results));
+		if (ctx.write2disk) fs.appendFile('Mapper_pid'+process.pid+'.txt',JSON.stringify(results));
 		//console.log(results);
 	}	
 	
@@ -95,7 +95,7 @@ function initReduceTask(chunk) {
         res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
 
-	if (ctx.write2disk) fs.appendFile('Reducer_pid'process.pid+'.txt',JSON.stringify(chunk));
+	if (ctx.write2disk) fs.appendFile('Reducer_pid'+process.pid+'.txt',JSON.stringify(chunk));
 
     process.nextTick(function () {
         process.send({
