@@ -13,7 +13,8 @@ process.on('message', function (msg) {
         })
         return;
     }
-	if (msg.write2disk) ctx.write2disk = msg.write2disk;
+	if (msg.map2disk) ctx.map2disk = msg.map2disk;
+	if (msg.reduce2disk) ctx.reduce2disk = msg.reduce2disk;
 	if (msg.linebreak) ctx.linebreak = msg.linebreak;
     if (msg.mapperFunction) {
         eval(msg.mapperFunction);
@@ -57,13 +58,23 @@ function initMapTask(numHash, file, start, end) {
 		process.send({
                     mapDone: true,
                     chunk: results
-                });
+        });
 		if (ctx._backdoor) 
 		{
 			ctx._backdoor();		
 		}
-		if (ctx.write2disk == "csv" || ctx.write2disk == "CSV") {};
-		else if (ctx.write2disk) fs.appendFile('Mapper_pid'+process.pid+'.txt',JSON.stringify(results)+"\r\n");
+
+		if (ctx.map2disk) 
+		{
+			
+			results.forEach(function(d,i){
+				
+				for (var key in d)
+				{
+					fs.appendFile('Mapper_'+encodeURIComponent(key)+'.txt',d[key]+"\n");
+				}
+			})
+		}
 		//console.log(results);
 	}	
 	
@@ -101,17 +112,16 @@ function initReduceTask(chunk) {
         res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
 
-	if (ctx.write2disk == "csv" || ctx.write2disk == "CSV") 
+	if (ctx.reduce2disk) 
 	{
 		var array = [];
 		for (var key in res)
 		{
 			array.push(res[key]);
 		}
-		fs.writeFile('Reducer_pid'+process.pid+'.txt',array.join('\n'));
-		
+		fs.writeFileSync('Reducer_pid'+process.pid+'.txt',array.join('\n'));
+		//array = null;
 	}
-	else if (ctx.write2disk) fs.writeFile('Reducer_pid'+process.pid+'.txt',JSON.stringify(res));
 
 	if (ctx._backdoor) 
 	{

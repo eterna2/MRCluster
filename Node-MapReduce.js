@@ -22,18 +22,11 @@ function MapReduce() {
 	ctx._hash = _hash;
 	ctx._post_reducer = _post_reducer;
 	ctx._aggregate_reducer = _aggregate_reducer;
-	ctx._write2disk = false;
 	ctx._sample = -1;
 	
 	ctx.sample = function(sample)
 	{
 		ctx._sample = parseInt(sample);
-		return ctx;
-	};
-	
-	ctx.write2disk = function(write2disk)
-	{
-		ctx._write2disk = write2disk;
 		return ctx;
 	};
 	
@@ -61,14 +54,22 @@ function MapReduce() {
 		return ctx;
 	}
 
-	ctx.map = function(func)
+	ctx.map = function(func,map2disk)
 	{
+		ctx._map2disk = map2disk;
 		ctx._mapper = "var mapper="+func.toString();
 		return ctx;
 	};
 
-	ctx.reduce = function(func)
+	ctx.mapOnly = function(mapOnly)
 	{
+		ctx._mapOnly = mapOnly;
+		return ctx;
+	}
+	
+	ctx.reduce = function(func,reduce2disk)
+	{
+		ctx._reduce2disk = reduce2disk;
 		ctx._reducer = "var reducer="+func.toString();
 		return ctx;
 	};
@@ -127,7 +128,8 @@ function MapReduce() {
 							reducerFunction: ctx._reducer,
 							hashFunction: ctx._hash,
 							linebreak: ctx._linebreak,
-							write2disk: ctx._write2disk
+							map2disk: ctx._map2disk,
+							reduce2disk: ctx._reduce2disk
 					});
 					ctx._activeWorkers++;  
 					if (ctx._activeWorkers >= numWorkers) analyzeFile(ctx._file, ctx._numBlocks, ctx._run, ctx._linebreak);
@@ -196,6 +198,15 @@ function MapReduce() {
 			--ctx._jobsLeft;
 			console.log("Map Jobs Remaining: "+ctx._jobsLeft)
 			_startMapper(ctx,this.id);
+
+			if (ctx._mapOnly && ctx._jobsLeft == 0) 
+			{
+				var dt = process.hrtime(ctx._startTime);	
+				console.info("Execution time: %ds %dms", dt[0], dt[1]/1000000);
+				ctx.killAll();
+				return;
+			}
+			else if (ctx._mapOnly) return;
 			ctx._sortHash(ctx._bin, msg.chunk);
         }
 		else if (msg.reduceDone) 
@@ -204,7 +215,8 @@ function MapReduce() {
 			ctx._reducerState[this.id-1] = false;
 			_startReducer(ctx,this.id-1,ctx._bin[this.id-1].pop());
         }
-		
+
+
 		var _bin = ctx._bin, reduceJobsLeft = 0;
 		for (var hash in _bin)
 		{

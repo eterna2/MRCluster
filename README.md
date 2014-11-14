@@ -55,12 +55,6 @@ Specify the number of Blocks to sample. The min number of samples must be >= num
 mrcluster.sample(1);
 ```
 
-##### Settings - write2disk
-Specify whether to write all the `Mapper` and `Reducer` outputs to file. Default is `False`.  
-```javascript
-mrcluster.write2disk(true);
-```
-
 ##### Settings - numMappers
 Specify the number of mappers to create. Default is `2`.
 ```javascript
@@ -68,13 +62,20 @@ mrcluster.numMappers(2);
 ```
 
 ##### Settings - map
-Specify the mapping function to be applied on each line of data. 
+First input specifies the mapping function to be applied on each line of data. Second input (optional) is a flag to specify whether to write the content of each Mapper to disk.
 The function should take in a `String` representing a line of data, and returns an `Array[2]` representing the resultant key-value pair.
 ```javascript
 mrcluster    
 	.map(function (line) {
         return [line.split(',')[0], 1];
-    })
+    },
+	true)
+```
+
+##### Settings - mapOnly
+Specify whether to run only Mappers. Default is `False`.  
+```javascript
+mrcluster.mapOnly(true)
 ```
 
 ##### Settings - hash
@@ -85,7 +86,7 @@ mrcluster.hash(3);
 ```
 
 ##### Settings - reduce
-Specify the reduce function to be applied. 
+First input specifies the reduce function to be applied. The second input (optional) specifies whether to write the result of each Reduce jobs to disk. 
 This function is applied once in the `Mapper` and once in the `Reducer`. It is applied at the end of the `Mapper` execution, just before returning the mapped results to the master node.  
 The function should take 2 variables representing the the values for the two key-value pairs. And returns a value representing the resultant value for the two key-value pairs.
 E.g. The following codes demonstrate the summing of the values for 2 key-value pairs - ['A',1] + ['A',1] = ['A',2]
