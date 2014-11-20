@@ -32,9 +32,14 @@ var mrcluster
 
 
 ##### Settings - file
-Specify the csv file to read in. 
+Specify the csv file or files to read in. 
 ```javascript
 mrcluster.file("mockdata_from_mockaroo.csv");
+```
+
+If an array of files are defined, each `Mapper` will parse 1 file as a single block.
+```javascript
+mrcluster.file(["file1.csv","file2.csv","file3.csv"]);
 ```
 
 ##### Settings - lineDelimiter

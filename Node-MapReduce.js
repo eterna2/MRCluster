@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('graceful-fs');
 
 const _mapper = "var mapper=function(line){return [line.split(',')[0], 1];};";
 const _reducer = "var reducer=function(a, b){return b;};";
@@ -32,7 +32,8 @@ function MapReduce() {
 	
 	ctx.file = function(file)
 	{
-		ctx._file = file;
+		if (Array.isArray(file)) ctx._files = file;
+		else ctx._file = file;
 		return ctx;
 	};
 
@@ -132,7 +133,11 @@ function MapReduce() {
 							reduce2disk: ctx._reduce2disk
 					});
 					ctx._activeWorkers++;  
-					if (ctx._activeWorkers >= numWorkers) analyzeFile(ctx._file, ctx._numBlocks, ctx._run, ctx._linebreak);
+					if (ctx._activeWorkers >= numWorkers) 
+					{
+						if (ctx._file) analyzeFile(ctx._file, ctx._numBlocks, ctx._run, ctx._linebreak);
+						else if (ctx._files) ctx._run(ctx._files.map(function(d){return {file:d,start:-1,end:-1}}));
+					}
 					console.log('worker#'+worker.id+ " online");
 
 				});
@@ -163,7 +168,7 @@ function MapReduce() {
 		
 		return ctx;
     };
-
+	
     ctx.broadcast = function (callback) {
         for (var id in ctx._cluster.workers) {
             callback(ctx._cluster.workers[id]);
@@ -239,7 +244,7 @@ function _startMapper(ctx,id)
 	ctx._cluster.workers[id].send({
 		startMap: true,
 		numHash: ctx._numReducers,
-		file: ctx._file,
+		file: job.file,
 		start: job.start,
 		end: job.end
 	});
@@ -300,6 +305,7 @@ function analyzeFile(filename, numBlocks, callback, linebreak) {
 	var jobs = intervals.map(
 		function (d, i, array) {
 			return {
+				file: filename,
 				start: d.step,
 				end: (i + 1 >= numBlocks) ? (filesize - 1) : (array[i + 1].step - 1)
 			};
@@ -307,6 +313,7 @@ function analyzeFile(filename, numBlocks, callback, linebreak) {
 	
 	console.log("file broken into "+numBlocks+" blocks");
 	
+	fs.closeSync(fd);
 	callback(jobs);
 
 

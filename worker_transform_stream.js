@@ -36,12 +36,9 @@ process.on('message', function (msg) {
 
 function initMapTask(numHash, file, start, end) {
 
+	var options = (start<0 || end<0)?{ encoding: "utf8"}:{ start:start, end:end, encoding: "utf8"};
     var results = new Array(numHash), lastLine = "";
-    var stream = new fs.ReadStream(file, {
-            start: start,
-            end: end,
-            encoding: "utf8"
-        })
+    var stream = new fs.ReadStream(file, options)
 		.on('data', parseData)
 		.on('end', done)
         .on('error', function (err) { throw err; })
