@@ -1,5 +1,5 @@
 const ctx = this;
-const fs = require('fs');
+const fs = require('graceful-fs');
 
 process.on('message', function (msg) {
     if (msg.compile) {
@@ -60,7 +60,7 @@ function initMapTask(numHash, file, start, end) {
 		{
 			ctx._backdoor();		
 		}
-
+		
 		if (ctx.map2disk) 
 		{
 			
@@ -72,6 +72,7 @@ function initMapTask(numHash, file, start, end) {
 				}
 			})
 		}
+
 		//console.log(results);
 	}	
 	

@@ -1,6 +1,6 @@
 {
     "name": "mrcluster",
-    "version": "0.0.16",
+    "version": "0.0.17",
     "engines" : { "node" : "~0.10.28" },
     "author": {
         "name": "William Teo",
@@ -28,5 +28,8 @@
         "type": "git",
         "url": "http://github.com/eterna2/MRCluster"
     },
+	"dependencies": {
+		"graceful-fs": "*"
+	},
     "license": "MIT"
 }

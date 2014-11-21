@@ -136,7 +136,13 @@ function MapReduce() {
 					if (ctx._activeWorkers >= numWorkers) 
 					{
 						if (ctx._file) analyzeFile(ctx._file, ctx._numBlocks, ctx._run, ctx._linebreak);
-						else if (ctx._files) ctx._run(ctx._files.map(function(d){return {file:d,start:-1,end:-1}}));
+						else if (ctx._files) 
+						{
+							ctx._files.forEach(function(d){
+								analyzeFile(d, ctx._numBlocks, ctx._concatJobs, ctx._linebreak);
+							})
+							ctx._run(ctx._jobs);
+						}
 					}
 					console.log('worker#'+worker.id+ " online");
 
@@ -152,7 +158,13 @@ function MapReduce() {
 		return ctx;
     };
 
-    ctx._run = function callback(jobs) {
+	ctx._concatJobs = function(jobs)
+	{
+		ctx._jobs = ctx._jobs || [];
+		ctx._jobs = ctx._jobs.concat(jobs);
+	}
+	
+    ctx._run = function(jobs) {
 		if (ctx._sample > 0) jobs = jobs.slice(0,Math.max(ctx._sample,ctx._numMappers));
 		ctx._startTime = process.hrtime();
 		ctx._jobs = jobs;
