@@ -13,7 +13,6 @@ process.on('message', function (msg) {
         })
         return;
     }
-	if (msg.id) ctx.id = msg.id;
 	if (msg.map2disk) ctx.map2disk = msg.map2disk;
 	if (msg.reduce2disk) ctx.reduce2disk = msg.reduce2disk;
 	if (msg.linebreak) ctx.linebreak = msg.linebreak;
@@ -21,19 +20,10 @@ process.on('message', function (msg) {
         eval(msg.mapperFunction);
         ctx._mapperFunction = mapper;
     }
-    if (msg.combinerFunction) {
-        eval(msg.combinerFunction);
-        ctx._combinerFunction = reducer;
-
-    }
     if (msg.reducerFunction) {
         eval(msg.reducerFunction);
         ctx._reducerFunction = reducer;
 
-    }
-    if (msg.drainFunction) {
-        eval(msg.drainFunction);
-        ctx._drainFunction = drain;
     }
     if (msg.hashFunction) {
         eval(msg.hashFunction);
@@ -56,7 +46,7 @@ function initMapTask(numHash, file, start, end) {
 	var linebreak = ctx.linebreak,
 		mapperFunction = ctx._mapperFunction,
 		hashFunction = ctx._hashFunction,
-		reducerFunction = ctx._combinerFunction;
+		reducerFunction = ctx._reducerFunction;
 
 	function done()
 	{
@@ -119,8 +109,7 @@ function initReduceTask(chunk) {
     for (var key in chunk) {
         res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
-	
-	
+
 	if (ctx.reduce2disk) 
 	{
 		var array = [];
@@ -130,10 +119,6 @@ function initReduceTask(chunk) {
 		}
 		fs.writeFileSync('Reducer_pid'+process.pid+'.txt',array.join('\n'));
 		//array = null;
-	}
-
-	if (ctx._drainFunction) {
-		ctx.reduceResults = ctx._drainFunction(res);
 	}
 
 	if (ctx._backdoor) 

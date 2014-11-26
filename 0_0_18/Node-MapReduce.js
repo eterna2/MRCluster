@@ -18,7 +18,6 @@ function MapReduce() {
 	ctx._numMappers = 2;
 	ctx._numReducers = 3;
 	ctx._mapper = _mapper;
-	ctx._combiner = _reducer;
 	ctx._reducer = _reducer;
 	ctx._hash = _hash;
 	ctx._post_reducer = _post_reducer;
@@ -69,16 +68,9 @@ function MapReduce() {
 		return ctx;
 	}
 	
-	ctx.combine = function(func)
-	{
-		ctx._combiner = "var reducer="+func.toString();
-		return ctx;
-	};
-	
 	ctx.reduce = function(func,reduce2disk)
 	{
 		ctx._reduce2disk = reduce2disk;
-		if (!ctx._combiner) ctx._combiner = "var reducer="+func.toString();
 		ctx._reducer = "var reducer="+func.toString();
 		return ctx;
 	};
@@ -90,7 +82,7 @@ function MapReduce() {
 		return ctx;
 	};
 
-	ctx.hash = ctx.numReducers = function(numHash)
+	ctx.hash = function(numHash)
 	{
 		ctx._numReducers = numHash;
 		ctx._hash = genHashFunction(numHash);
@@ -98,12 +90,6 @@ function MapReduce() {
 	};
 
 	
-	ctx.drain = function(func)
-	{
-		ctx._drain = "var drain="+func.toString();
-		return ctx;
-	};
-
 	ctx.post_reduce = function(func)
 	{
 		ctx._post_reducer = "var post_reducer="+func.toString();
@@ -139,11 +125,8 @@ function MapReduce() {
                 })
 				.on('online', function(worker){ 
 					worker.send({
-							id: worker.id,
 							mapperFunction: ctx._mapper,
-							combinerFunction: ctx._combiner,
 							reducerFunction: ctx._reducer,
-							drainFunction: ctx._drain,
 							hashFunction: ctx._hash,
 							linebreak: ctx._linebreak,
 							map2disk: ctx._map2disk,
