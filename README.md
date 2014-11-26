@@ -283,7 +283,15 @@ mrcluster.init()
 
 
 ### Rehashing long user ids
-Finding users share same domain for their emails.
+Assuming you have very long user ids (e.g. md5 hashes), and you wish to replace these ids with unique integers. You can achieve this by setting the key to be the id, and the value to be the data for the `mapper`. Then concat the data by keys in the `combiner` and `reducer`. 
+
+As you concat data, memory usage is monotonically increasing. So you will want to free up memory by writing out data that you have already grouped by id. And as the keys in each `reducer` is independent to other `reducers`, you can replace the key with an integer with base of the number of reducers (needs to be prime). 
+
+E.g. Assuming 7 reducers, 
+1st key in reducer 1 = 1, 
+2nd key in reducer 1 = 8,
+n key in reducer m = (n-1)*(number of reducers) + m
+
 ```javascript
 var mrcluster = require("mrcluster");
 
