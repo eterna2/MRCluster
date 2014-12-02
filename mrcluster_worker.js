@@ -101,7 +101,17 @@ function initMapTask(numHash, file, start, end) {
 	{
 		if (d.length <= 0) return;
 		var valuepair = mapperFunction(d);
-		
+		if (Array.isArray(valuepair)) mapValuePair(valuepair);
+		else
+		{
+			var valuepairs = Object.keys(valuepair).map(function(d){return [d,valuepair[d]];});
+			valuepairs.forEach(mapValuePair);
+		}
+
+	}
+	
+	function mapValuePair(valuepair)
+	{
 		var hash = hashFunction(valuepair[0]);
 		results[hash] = results[hash] || {};
 		results[hash][valuepair[0]] = (!results[hash][valuepair[0]]) ? valuepair[1] : reducerFunction(results[hash][valuepair[0]], valuepair[1]);

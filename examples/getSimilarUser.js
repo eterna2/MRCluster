@@ -3,13 +3,13 @@ var mrcluster = require("mrcluster");
 mrcluster.init()
     .file("mockdata_from_mockaroo.csv")
     .lineDelimiter('\n')
-	.numBlocks(9)
+	.blockSize(1)
 	.numMappers(3)
+    .numReducers(3)
     .map(function (line) {
 		var a = line.split(',')[1].split('@');
         return [a[1] || 'NA', [a[0]]];
     })
-    .hash(3)
     .reduce(function (a, b) {
         return a.concat(b);
     })

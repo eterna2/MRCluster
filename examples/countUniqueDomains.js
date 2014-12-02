@@ -3,12 +3,12 @@ var MapReduce = require("mrcluster");
 MapReduce.init()
     .file("mockdata_from_mockaroo.csv")
     .lineDelimiter('\n')
-	.numBlocks(9)
+	.blockSize(1)
 	.numMappers(3)
+    .numReducers(3)
     .map(function (line) {
         return [line.split(',')[1].split('@')[1] || 'NA', 1];
     })
-    .hash(3)
     .reduce(function (a, b) {
         return 1;
     })

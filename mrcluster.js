@@ -24,6 +24,7 @@ function MapReduce() {
 	ctx._post_reducer = _post_reducer;
 	ctx._aggregate_reducer = _aggregate_reducer;
 	ctx._sample = -1;
+	ctx._blockSize = 67108864; // 64 mb
 	
 	ctx.sample = function(sample)
 	{
@@ -41,6 +42,12 @@ function MapReduce() {
 	ctx.numBlocks = function(numBlocks)
 	{
 		ctx._numBlocks = numBlocks;
+		return ctx;
+	};
+	
+	ctx.blockSize = function(blockSize)
+	{
+		ctx._blockSize = blockSize*1024*1024;
 		return ctx;
 	};
 
@@ -124,7 +131,7 @@ function MapReduce() {
 		
         if (ctx._cluster.isMaster) {
             ctx._cluster.setupMaster({
-                exec: __dirname+"/worker_transform_stream.js"
+                exec: __dirname+"/mrcluster_worker.js"
                 //silent : true
             })
             
@@ -152,11 +159,11 @@ function MapReduce() {
 					ctx._activeWorkers++;  
 					if (ctx._activeWorkers >= numWorkers) 
 					{
-						if (ctx._file) analyzeFile(ctx._file, ctx._numBlocks, ctx._run, ctx._linebreak);
+						if (ctx._file) analyzeFile(ctx._file, ctx, ctx._run);
 						else if (ctx._files) 
 						{
 							ctx._files.forEach(function(d){
-								analyzeFile(d, ctx._numBlocks, ctx._concatJobs, ctx._linebreak);
+								analyzeFile(d, ctx, ctx._concatJobs);
 							})
 							ctx._run(ctx._jobs);
 						}
@@ -309,15 +316,21 @@ function _compileResult(ctx) {
 	ctx._reducerState.forEach(function(d,i){ctx._cluster.workers[i+1].send({compile: ctx._post_reducer})})
 };
 
-function analyzeFile(filename, numBlocks, callback, linebreak) {
+function analyzeFile(filename, ctx, callback) {
+
+	var linebreak = ctx._linebreak,
+		numBlocks = ctx._numBlocks,
+		blockSize = ctx._blockSize;
 
     var fd = fs.openSync(filename, 'r'),
         stats = fs.statSync(filename),
         filesize = stats["size"];
-	//console.log(filesize)
-    var step = Math.floor(filesize / numBlocks),
+
+    var step = blockSize || Math.floor(filesize / numBlocks),
 		intervals = [];
 
+	numBlocks = Math.ceil(filesize/step);
+		
     for (var i = 0; i < numBlocks; i++) {
 		var bufferSize = Math.min(1000,parseInt(step))
 		//console.log('bufferSize'+bufferSize)
@@ -340,7 +353,7 @@ function analyzeFile(filename, numBlocks, callback, linebreak) {
 			};
 		})
 	
-	console.log("file broken into "+numBlocks+" blocks");
+	console.log("File broken into "+numBlocks+" blocks of "+parseFloat(step/(1024*1024)).toFixed(1)+" Mb each.");
 	
 	fs.closeSync(fd);
 	callback(jobs);

@@ -14,13 +14,13 @@ npm install mrcluster
 
 * `lineDelimiter`: delimiter for linebreaks in the data.
 
-* `numBlocks`: number of chunks to create for each file.
+* `blockSize`: size in Mb for each block.
 
 * `sample`: number of sample chunks to run (to test ur codes).
 
 * `numMappers`: number of Mappers to use.
 
-* `map`: Map function. Takes in a line and return a key-value pair array.
+* `map`: Map function. Takes in a line and return a key-value pair array (1-1 mapping) or a hashtable of key-value pairs (1-n mapping).
 
 * `combine`: Combine function applied after the Map task in the Mapper. Takes in 2 values with same key, and return a value for the key.
 
@@ -37,14 +37,17 @@ npm install mrcluster
 * `aggregate`: Aggregate function at the master node. Aggregates all the values returned by all the Reducers. Takes in an array of values (same as number of Reducers).
 
 
+*v0.0.20*
+* Replaced `numBlocks` with `blockSize` function to allow user to define the size of each block in Mb. Default is `64 Mb`.
+* Enhanced `map` function to allow 1-n mapping - mapping 1 line of data into multiple key-value pairs in the form of a hashtable.
 
 *v0.0.19*
 * Added `combine` function to allow user to define the `reduce` function to run at the `Mapper`.
 * Added `drain` function to allow user to clear the memory of the `Reducer` after each reduce task.
 * Added example on how to rehash "long" user ids into unique integers.
 
+## Quick Start
 ---
-### Usage
 #### Create a new instance
 ```javascript
 var mrcluster = require("mrcluster").init();
@@ -59,14 +62,19 @@ mrcluster
 	.numBlocks(9);
 ```
 
-#### Starting the MapReduce operation
+#### Overview
 ```javascript
 var mrcluster
 	.file("mockdata_from_mockaroo.csv")
+	.map(function(line){ some map function returning a key-value pair })
+	.reduce(function(a,b){ some reduce function returning a value })
+	.post_reduce(function(hashtable){ some function to return aggregated results back to master node })
+	.aggregate(function(array){ some aggregation function for all the results returned by the reducers })
 	.start();
 ```
 
-
+## Options
+---
 ##### Settings - file
 Specify the csv file or files to read in. 
 ```javascript
@@ -84,11 +92,11 @@ Specify the delimiter to indicate a new line. Default is `\n`.
 mrcluster.lineDelimiter('\n');
 ```
 
-##### Settings - numBlocks (optional)
-Specify the number of blocks to split the file into. Default is `2`.
+##### Settings - blockSize (optional)
+Specify the size of each block (in Mb) to break the file into. Default is `64 Mb`.
 As each NodeJs process (aka each `Mapper` / `Reducer`) is limited to ~1 Gb RAM (x64), you might want to break up the file into sufficiently small blocks. 
 ```javascript
-mrcluster.numBlocks(9);
+mrcluster.blockSize(64);	// each block will be ~64 Mb
 ```
 
 ##### Settings - sample (optional)
@@ -98,10 +106,25 @@ This function is useful to have a quick test of your codes before actually runni
 mrcluster.sample(1);
 ```
 
+##### Settings - mapOnly (optional)
+Specify whether to run only Mappers. Default is `False`.  
+Note that you still need to specify your `Reduce` function as the `Reduce` step is also performed in the `Mapper`. 
+```javascript
+mrcluster.mapOnly(true)
+```
+
 ##### Settings - numMappers (optional)
 Specify the number of mappers to create. Default is `2`.
 ```javascript
 mrcluster.numMappers(2);
+```
+
+##### Settings - numReducers (optional)
+Specify the number of reducers to create. Default is `3`.
+The underlying codes will hash all key-values pairs produced by the mappers into the respective reducers. Hence, each chunks of key-values pairs in each reducer is independent of each other. This reduces memory usage when doing the reduce operation. 
+
+```javascript
+mrcluster.numReducers(3);
 ```
 
 ##### Settings - map
@@ -115,6 +138,19 @@ mrcluster
     },
 	true)
 ```
+Alternatively, the function can also return a `Hashtable` of key-value pairs, aka, instead of mapping a line of data into a single key-value pair, the map function can also map a line of data into multiple key-value pairs represented in a hashtable.
+```javascript
+mrcluster    
+	.map(function (line) {
+		var hashtable = {};
+		hashtable[key1] = line;
+		hashtable[key2] = line;
+		hashtable[key3] = line;
+        return hashtable;
+    },
+	true)
+```
+ 
 
 ##### Settings - combine (optional)
 The `combine` function is essentially the `reduce` operation to perform at the mapper, as some reduce jobs can be done at the mapper instead of the reducer.
@@ -124,21 +160,6 @@ mrcluster
 	.combine(function (a,b) {
         return a + b;
     })
-```
-
-##### Settings - mapOnly (optional)
-Specify whether to run only Mappers. Default is `False`.  
-Note that you still need to specify your `Reduce` function as the `Reduce` step is also performed in the `Mapper`. 
-```javascript
-mrcluster.mapOnly(true)
-```
-
-##### Settings - numReducers (optional)
-Specify the number of reducers to create. Default is `3`.
-The underlying codes will hash all key-values pairs produced by the mappers into the respective reducers. Hence, each chunks of key-values pairs in each reducer is independent of each other. This reduces memory usage when doing the reduce operation. 
-
-```javascript
-mrcluster.numReducers(3);
 ```
 
 ##### Settings - reduce
@@ -213,9 +234,14 @@ var mrcluster = require("mrcluster");
 
 mrcluster.init()
     .file("mockdata_from_mockaroo.csv")	
+	// line delimiter is \n
     .lineDelimiter('\n')
-	.numBlocks(9)
-	.numMappers(3)
+	// each block is 1 Mb
+	.blockSize(1)	
+	// 2 mappers
+	.numMappers(2)
+	// 3 reducers
+    .numReducers(3)	
 	// function to map a line of data to a key-value pair
     .map(function (line) {
 		// tokenize line
@@ -224,9 +250,7 @@ mrcluster.init()
 		// return a key-value pair of format [domain,1]
         return [line.split(',')[1].split('@')[1] || 'NA', 1];
     })
-	// all the domain keys produced will be hashed into 3 bins, which will be handled by 3 Reducers
-    .hash(3)	
-	// simple reduce function which return a value of 1 (aka return [domainX,1] when [domainX,1] meet [domainX,1])
+	// simple reduce function which return a value of 1
     .reduce(function (a, b) {
         return 1;
     })
@@ -250,6 +274,7 @@ mrcluster.init()
     .start();
 ```
 
+
 ### Finding similar users
 Finding users share same domain for their emails.
 ```javascript
@@ -258,13 +283,13 @@ var mrcluster = require("mrcluster");
 mrcluster.init()
     .file("mockdata_from_mockaroo.csv")
     .lineDelimiter('\n')
-	.numBlocks(9)
-	.numMappers(3)
+	.blockSize(1)
+	.numMappers(2)
+    .numReducers(3)
     .map(function (line) {
 		var a = line.split(',')[1].split('@');
         return [a[1] || 'NA', [a[0]]];
     })
-    .hash(3)
     .reduce(function (a, b) {
         return a.concat(b);
     })
@@ -298,16 +323,13 @@ var mrcluster = require("mrcluster");
 mrcluster.init()
     .file("mockdata_from_mockaroo.csv")
     .lineDelimiter('\n')
-    .numBlocks(10)
+    .blockSize(1)
     .numMappers(2)
+    .numReducers(7)
     .map(function (line) {
 		var d = line.split(',');
 		var id = d.shift();
         return [id, [d.join(',')]];
-    })
-    .hash(7)
-    .combine(function (a, b) {
-        return a.concat(b);
     })
     .reduce(function (a, b) {
         return a.concat(b);
@@ -318,7 +340,8 @@ mrcluster.init()
 		{
 			obj[key] = [];
 			list[key].forEach(function(d){
-				lines += (id*7+ctx.id)+','+d+"\n";		// ctx.id is the id of the reducer
+				// ctx.id is the id of the reducer
+				lines += (id*7+ctx.id)+','+d+"\n";		
 			});
 			id++;
 		}

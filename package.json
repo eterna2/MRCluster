@@ -1,25 +1,25 @@
 {
     "name": "mrcluster",
-    "version": "0.0.19",
+    "version": "0.0.20",
     "engines" : { "node" : "~0.10.28" },
     "author": {
         "name": "William Teo",
         "email": "eterna2@hotmail.com",
         "url": "http://www.eterna2.net"
     },
-    "description": "A multi-core pseudo-MapReduce implementation on NodeJS",
+    "description": "A single node multi-core pseudo-MapReduce implementation on NodeJS. Input files are automatically broken into blocks and distributed to the Mappers and Reducers. Examples of implementations can be found in the read.me.",
     "keywords": [
         "mapreduce",
         "hadoop",
         "cluster"
     ],
-    "main": "Node-MapReduce.js",
+    "main": "mrcluster.js",
     "files": [
-        "Node-MapReduce.js",
-        "worker_transform_stream.js"
+        "mrcluster.js",
+        "mrcluster_worker.js"
     ],
     "bin": {
-        "mrcluster": "worker_transform_stream.js"
+        "mrcluster": "mrcluster_worker.js"
     },
     "url": "http://github.com/eterna2/MRCluster/issues",
     "email": "eterna2@hotmail.com",
