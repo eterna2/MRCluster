@@ -94,7 +94,7 @@ var mrcluster
 
 ## Options
 ---
-##### .file(filename<<string>>), .file(filenames<array>)
+##### .file(string), .file(array)
 Specify the csv file or files to read in. 
 ```javascript
 mrcluster.file("mockdata_from_mockaroo.csv");
@@ -105,27 +105,27 @@ If an array of files are given, the files will be broken into their respective b
 mrcluster.file(["file1.csv","file2.csv","file3.csv"]);
 ```
 
-##### .lineDelimiter(<string>) (optional)
+##### .lineDelimiter(string) (optional)
 Specify the delimiter to indicate a new line. Default is `\n`.  
 ```javascript
 mrcluster.lineDelimiter('\n');
 ```
 
-##### .blockSize(SizeInMb<number>) (optional)
+##### .blockSize(number) (optional)
 Specify the size of each block (in Mb) to break the file into. Default is `64 Mb`.
 As each NodeJs process (aka each `Mapper` / `Reducer`) is limited to ~1 Gb RAM (x64), you might want to break up the file into sufficiently small blocks. 
 ```javascript
 mrcluster.blockSize(64);	// each block will be ~64 Mb
 ```
 
-##### .sample(<integer>) (optional)
+##### .sample(integer) (optional)
 Specify the number of Blocks to sample. The min number of samples must be >= number of `Mappers`. Default is `-1` (Do not sample - run everything).  
 This function is useful to have a quick test of your codes before actually running through the entire dataset.
 ```javascript
 mrcluster.sample(1);
 ```
 
-##### .cache(<Object>) (optional)
+##### .cache(Object) (optional)
 Pre-load an Object or variable to all `Mappers` and `Reducers`. E.g. An array of weights. This Object can be called in any of the callbacks (e.g. `.map`, `.reduce`) via the variable `ctx._cache`. The `ctx._cache` variable for each `Mappers` and `Reducers` is mutable and persistent. Each `ctx._cache` variable starts off identical but is independent from each other in the subsequent operations.
 
 ```javascript
@@ -144,7 +144,7 @@ mrcluster
 
 ```
 
-##### .fn(function_name<string>,function<>) (optional)
+##### .fn(string,function) (optional)
 Pre-load an function to all `Mappers` and `Reducers` - so that you can call them within the `.map`, `.reduce`, `.post_reduce`, `.drain` functions. This function can be called multiple times, each time it appends a new custom function to the env.
 The custom function can be called via `_fn` variable as shown in the example below.
 
@@ -162,20 +162,20 @@ mrcluster
 
 ```
 
-##### .mapOnly(<bool>) (optional)
+##### .mapOnly(bool) (optional)
 Specify whether to run only Mappers. Default is `False`.  
 Note that you still need to specify your `Reduce` function as the `Reduce` step is also performed in the `Mapper`. 
 ```javascript
 mrcluster.mapOnly(true)
 ```
 
-##### .numMappers(<integer>) (optional)
+##### .numMappers(integer) (optional)
 Specify the number of mappers to create. Default is `1`.
 ```javascript
 mrcluster.numMappers(2);
 ```
 
-##### .numReducers(<integer>) (optional)
+##### .numReducers(integer) (optional)
 Specify the number of reducers to create. Default is `3`.
 The underlying codes will hash all key-values pairs produced by the mappers into the respective reducers. Hence, each chunks of key-values pairs in each reducer is independent of each other. This reduces memory usage when doing the reduce operation. 
 
@@ -183,7 +183,7 @@ The underlying codes will hash all key-values pairs produced by the mappers into
 mrcluster.numReducers(3);
 ```
 
-##### .partition(numReducers<integer>,hash_function<string>) (optional)
+##### .partition(integer,hash_function(string)) (optional)
 Specify a custom hash function to distribute the Mapper outputs to the respective Reducers. Takes in `numReducers` as 1st input, and custom hash function as 2nd input.
 The custom hash function takes in a `key` and returns an integer (representing which Reducer to send this key pair to). Note that the number of Reducers must match the output of the hash function. Custom hash function allows you to perform some ordering functions in map-reduce, but you have to take care that the hash function is able to evenly distribute the loads among the Reducers. 
 
@@ -198,7 +198,7 @@ mrcluster.partition(3,
 );
 ```
 
-##### .map(map_function<string>,writeToFile<bool>)
+##### .map(map_function(string),bool)
 First input specifies the mapping function to be applied on each line of data. 
 Second input (optional) is a flag to specify whether to write the content of each Mapper to disk. This is often used with the `mapOnly` options when you are only doing `Map` tasks (e.g. remapping data).
 The function should take in a `String` representing a line of data, and returns an `Array[2]` representing the resultant key-value pair.
@@ -222,7 +222,7 @@ mrcluster
 	true)
 ```
  
-##### .mapCSV(map_function<array>,writeToFile<bool>) (replaces `.map`) 
+##### .mapCSV(map_function(array),bool) (replaces `.map`) 
 This is a CSV replacement for the `.map` function, where the input variable is an array instead of a line. This array is automatically extracted from the line using the method described [here](http://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript). The main advantage is that quotes and double quotes in the csv are automatically handled, and converted into an array. However, this come at the cost of extra computation time as `regex` is used to extract the values. For simple CSV, it may be a better alternative to do a simple line split in the `.map` function.
 ```javascript
 mrcluster    
@@ -233,7 +233,7 @@ mrcluster
 ```
 
 
-##### .combine(combine_function<object,object>) (optional)
+##### .combine(combine_function(object,object)) (optional)
 The `combine` function is essentially the `reduce` operation to perform at the mapper, as some reduce jobs can be done at the mapper instead of the reducer.
 By default the `combine` function will be the same as the `reduce` function. However, you can use this function call to specify a different `.reduce` function at the mapper.
 ```javascript
@@ -243,7 +243,7 @@ mrcluster
     })
 ```
 
-##### .reduce(reduce_function<object,object>)
+##### .reduce(reduce_function(object,object))
 First input specifies the reduce function to be applied. The second input (optional) specifies whether to write the result of each Reduce jobs to disk. 
 This function is applied once in the `Mapper` and once in the `Reducer`. It is applied at the end of the `Mapper` execution, just before returning the mapped results to the master node.  
 The function should take 2 variables representing the the values for the two key-value pairs. And returns a value representing the resultant value for the two key-value pairs.
@@ -255,7 +255,7 @@ mrcluster
     })
 ```
 
-##### .drain(drain_function<object>) (optional)
+##### .drain(drain_function(object)) (optional)
 In the MR task, each reducer actually hold in memory the hashtable of key-value pairs it has received so far. For some reduce tasks (e.g. concat, or append tasks), the size of the value in the key-value pair increases after each reduce task which might lead to out of memory problems. 
 The `.drain` function can be used to free up memory in some of these situation. The `.drain` function takes in a `hashtable` of the current key-value pairs held in memory by the reducer, and returns the new `hashtable`.
 
@@ -278,7 +278,7 @@ mrcluster
 	})
 ```
 
-##### .post_reduce(drain_function<object>) (optional)
+##### .post_reduce(post_reduce_function(object)) (optional)
 Specify the function to be applied at the end of each `Reducer` execution. 
 The function should take in an `hashtable` holding all the key-values produced by the `Reducer`. And can return any value to the master node for further collation (e.g. sum).
 ```javascript
@@ -294,7 +294,7 @@ mrcluster
     })
 ```
 
-##### .aggregate(aggregate_function<array>) (optional)
+##### .aggregate(aggregate_function(array)) (optional)
 Specify the function to be applied at the end of all tasks. 
 The function should take in an `Array` (representing the hash bins) holding all the returned Values produced by the `.post_reduce` function (e.g. You can do a summation of all the returned sums of all the `Reducers`).  
 ```javascript
