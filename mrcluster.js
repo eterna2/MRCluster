@@ -43,6 +43,13 @@ function MapReduce() {
 		ctx._cache = obj;
 		return ctx;
 	}
+
+	ctx.fn = function(fn_name,fn)
+	{
+		ctx._fn = ctx._fn || [];
+		ctx._fn.push([fn_name,fn.toString()]);
+		return ctx;
+	}
 	
 	ctx.numBlocks = function(numBlocks)
 	{
@@ -170,7 +177,8 @@ function MapReduce() {
 							map2disk: ctx._map2disk,
 							reduce2disk: ctx._reduce2disk,
 							csv: ctx._csv,
-							cache: ctx._cache
+							cache: ctx._cache,
+							fn: ctx._fn
 					});
 					ctx._activeWorkers++;  
 					if (ctx._activeWorkers >= numWorkers) 

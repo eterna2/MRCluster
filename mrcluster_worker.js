@@ -1,5 +1,6 @@
 const ctx = this;
 const fs = require('graceful-fs');
+var _fn = {};
 
 process.on('message', function (msg) {
     if (msg.compile) {
@@ -41,6 +42,13 @@ process.on('message', function (msg) {
         eval(msg.hashFunction);
         ctx._hashFunction = hash;
     }
+	if (msg.fn)
+	{
+		ctx._fn = ctx._fn || {};
+		msg.fn.forEach(function(d){
+			eval("_fn['"+d[0]+"']="+d[1]);
+		})
+	}
     if (msg.startMap) initMapTask(msg.numHash, msg.file, msg.start, msg.end);
     else if (msg.startReduce) initReduceTask(msg.chunk);
     else if (msg.kill) process.exit(0);
