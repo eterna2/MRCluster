@@ -15,10 +15,9 @@ function MapReduce() {
 	
 	ctx._numBlocks = 2;
 	ctx._linebreak = '\n';
-	ctx._numMappers = 2;
+	ctx._numMappers = 1;
 	ctx._numReducers = 3;
 	ctx._mapper = _mapper;
-	ctx._combiner = _reducer;
 	ctx._reducer = _reducer;
 	ctx._hash = _hash;
 	ctx._post_reducer = _post_reducer;
@@ -39,6 +38,12 @@ function MapReduce() {
 		return ctx;
 	};
 
+	ctx.cache = function(obj)
+	{
+		ctx._cache = obj;
+		return ctx;
+	}
+	
 	ctx.numBlocks = function(numBlocks)
 	{
 		ctx._numBlocks = numBlocks;
@@ -65,11 +70,20 @@ function MapReduce() {
 
 	ctx.map = function(func,map2disk)
 	{
+		ctx._csv = false;
 		ctx._map2disk = map2disk;
 		ctx._mapper = "var mapper="+func.toString();
 		return ctx;
 	};
-
+	
+	ctx.mapCSV = function(func,map2disk)
+	{
+		ctx._csv = true;
+		ctx._map2disk = map2disk;
+		ctx._mapper = "var mapper="+func.toString();
+		return ctx;
+	};
+	
 	ctx.mapOnly = function(mapOnly)
 	{
 		ctx._mapOnly = mapOnly;
@@ -85,12 +99,12 @@ function MapReduce() {
 	ctx.reduce = function(func,reduce2disk)
 	{
 		ctx._reduce2disk = reduce2disk;
-		if (!ctx._combiner) ctx._combiner = "var reducer="+func.toString();
 		ctx._reducer = "var reducer="+func.toString();
+		if (!ctx._combiner) ctx._combiner = ctx._reducer;
 		return ctx;
 	};
 	
-	ctx.customhash = function(numReducers, func)
+	ctx.partition = function(numReducers, func)
 	{
 		ctx._numReducers = numReducers;
 		ctx._hash = "var hash="+func.toString();
@@ -148,13 +162,15 @@ function MapReduce() {
 					worker.send({
 							id: worker.id,
 							mapperFunction: ctx._mapper,
-							combinerFunction: ctx._combiner,
+							combinerFunction: ctx._combiner || ctx._reducer,
 							reducerFunction: ctx._reducer,
 							drainFunction: ctx._drain,
 							hashFunction: ctx._hash,
 							linebreak: ctx._linebreak,
 							map2disk: ctx._map2disk,
-							reduce2disk: ctx._reduce2disk
+							reduce2disk: ctx._reduce2disk,
+							csv: ctx._csv,
+							cache: ctx._cache
 					});
 					ctx._activeWorkers++;  
 					if (ctx._activeWorkers >= numWorkers) 
@@ -196,8 +212,12 @@ function MapReduce() {
 		ctx._reducJobsLeft = 0;
 		var numReducers = ctx._numReducers,
 			numMappers = ctx._numMappers;
-		ctx._reducerState = new Array(numReducers);
-		for (var i=0; i<numMappers; i++)
+		ctx._reducerState = (new Array(numReducers));
+		for (var i=0; i<numReducers; ++i)
+		{
+			ctx._reducerState[i] = false;
+		}
+		for (var i=0; i<numMappers; ++i)
 		{
 			_startMapper(ctx,numReducers+i);
 		}
@@ -252,12 +272,12 @@ function MapReduce() {
         }
 		else if (msg.reduceDone) 
 		{
-			console.log("Reduce Jobs Remaining: "+ctx._reducJobsLeft)
+			console.log("Reducer#"+(this.id-1)+" Done. Reduce Jobs Remaining: "+ctx._reducJobsLeft)
 			ctx._reducerState[this.id-1] = false;
 			_startReducer(ctx,this.id-1,ctx._bin[this.id-1].pop());
         }
 
-
+		//console.log(ctx._reducerState)
 		var _bin = ctx._bin, reduceJobsLeft = 0;
 		for (var hash in _bin)
 		{

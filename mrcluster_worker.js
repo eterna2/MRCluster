@@ -17,6 +17,8 @@ process.on('message', function (msg) {
 	if (msg.map2disk) ctx.map2disk = msg.map2disk;
 	if (msg.reduce2disk) ctx.reduce2disk = msg.reduce2disk;
 	if (msg.linebreak) ctx.linebreak = msg.linebreak;
+	if (msg.csv) ctx._csv = msg.csv;
+	if (msg.cache) ctx._cache = msg.cache;
     if (msg.mapperFunction) {
         eval(msg.mapperFunction);
         ctx._mapperFunction = mapper;
@@ -46,6 +48,7 @@ process.on('message', function (msg) {
 
 function initMapTask(numHash, file, start, end) {
 
+	ctx._file = file;
 	var options = (start<0 || end<0)?{ encoding: "utf8"}:{ start:start, end:end, encoding: "utf8"};
     var results = new Array(numHash), lastLine = "";
     var stream = new fs.ReadStream(file, options)
@@ -54,7 +57,7 @@ function initMapTask(numHash, file, start, end) {
         .on('error', function (err) { throw err; })
 
 	var linebreak = ctx.linebreak,
-		mapperFunction = ctx._mapperFunction,
+		mapperFunction = (!ctx._csv) ? ctx._mapperFunction : function(d){ return ctx._mapperFunction(CSVtoArray(d))},
 		hashFunction = ctx._hashFunction,
 		reducerFunction = ctx._combinerFunction;
 
@@ -118,8 +121,6 @@ function initMapTask(numHash, file, start, end) {
 	}
 }
 
-
-
 function initReduceTask(chunk) {
 
     var reduce = ctx._reducerFunction;
@@ -158,3 +159,26 @@ function initReduceTask(chunk) {
     })
 
 }
+
+
+// Source: ridgerunner @ http://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript
+// Return array of string values, or NULL if CSV string not well formed.
+function CSVtoArray(text) {
+    var re_valid = /^\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*(?:,\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*)*$/;
+    var re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g;
+    // Return NULL if input string is not well formed CSV string.
+    if (!re_valid.test(text)) return null;
+    var a = [];                     // Initialize array to receive values.
+    text.replace(re_value, // "Walk" the string using replace with callback.
+        function(m0, m1, m2, m3) {
+            // Remove backslash from \' in single quoted values.
+            if      (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
+            // Remove backslash from \" in double quoted values.
+            else if (m2 !== undefined) a.push(m2.replace(/\\"/g, '"'));
+            else if (m3 !== undefined) a.push(m3);
+            return ''; // Return empty string.
+        });
+    // Handle special case of empty last value.
+    if (/,\s*$/.test(text)) a.push('');
+    return a;
+};

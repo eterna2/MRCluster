@@ -1,13 +1,13 @@
 {
     "name": "mrcluster",
-    "version": "0.0.20",
+    "version": "0.0.21",
     "engines" : { "node" : "~0.10.28" },
     "author": {
         "name": "William Teo",
         "email": "eterna2@hotmail.com",
         "url": "http://www.eterna2.net"
     },
-    "description": "A single node multi-core pseudo-MapReduce implementation on NodeJS. Input files are automatically broken into blocks and distributed to the Mappers and Reducers. Examples of implementations can be found in the read.me.",
+    "description": "A single node multi-core pseudo-MapReduce implementation on NodeJS. Input files are automatically broken into blocks and distributed to the Mappers and Reducers. Examples of implementations can be found in the README.",
     "keywords": [
         "mapreduce",
         "hadoop",
