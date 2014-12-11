@@ -94,7 +94,7 @@ var mrcluster
 
 ## Options
 ---
-##### .file(filename<string>), .file(filenames<array>)
+##### .file(filename<<string>>), .file(filenames<array>)
 Specify the csv file or files to read in. 
 ```javascript
 mrcluster.file("mockdata_from_mockaroo.csv");
