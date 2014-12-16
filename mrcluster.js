@@ -27,7 +27,7 @@ function MapReduce() {
 	
 	ctx.sample = function(sample)
 	{
-		ctx._sample = parseInt(sample);
+		ctx._sample = parseInt(sample)||1;
 		return ctx;
 	};
 	
@@ -53,25 +53,25 @@ function MapReduce() {
 	
 	ctx.numBlocks = function(numBlocks)
 	{
-		ctx._numBlocks = numBlocks;
+		ctx._numBlocks = numBlocks||1;
 		return ctx;
 	};
 	
 	ctx.blockSize = function(blockSize)
 	{
-		ctx._blockSize = blockSize*1024*1024;
+		ctx._blockSize = (blockSize||64)*1024*1024;
 		return ctx;
 	};
 
 	ctx.lineDelimiter = function(lineDelimiter)
 	{
-		ctx._linebreak = lineDelimiter;
+		ctx._linebreak = lineDelimiter||'\n';
 		return ctx;
 	};
 
 	ctx.numMappers = function(numMappers)
 	{
-		ctx._numMappers = numMappers;
+		ctx._numMappers = numMappers||1;
 		return ctx;
 	}
 
@@ -151,6 +151,9 @@ function MapReduce() {
 		ctx._sortHash = _sortHash;
 		
         if (ctx._cluster.isMaster) {
+		
+			var stopwords = _hashStopwords(ctx);
+		
             ctx._cluster.setupMaster({
                 exec: __dirname+"/mrcluster_worker.js"
                 //silent : true
@@ -178,7 +181,8 @@ function MapReduce() {
 							reduce2disk: ctx._reduce2disk,
 							csv: ctx._csv,
 							cache: ctx._cache,
-							fn: ctx._fn
+							fn: ctx._fn,
+							stopwords: stopwords[worker.id] || undefined
 					});
 					ctx._activeWorkers++;  
 					if (ctx._activeWorkers >= numWorkers) 
@@ -300,6 +304,15 @@ function MapReduce() {
     return ctx;
 };
 
+function _hashStopwords(ctx)
+{
+	if (!ctx._stopwords) return {};
+	eval(ctx._hash);
+	var obj = {};
+	ctx._stopwords.forEach(function(d){obj[hash(d)]=d;});
+	return obj;
+}
+
 function _startMapper(ctx,id)
 {
 	var job = ctx._jobs.pop();
@@ -400,4 +413,4 @@ function _aggregate_reducer(answer) {
 
 
 // expose module methods
-exports.init = MapReduce;
+exports.init = function(){return new MapReduce();};

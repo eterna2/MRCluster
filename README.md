@@ -46,6 +46,9 @@ npm install mrcluster
 
 * `.aggregate`: Aggregate function at the master node. Aggregates all the values returned by all the Reducers. Takes in an array of values (same as number of Reducers).
 
+*v0.0.23*
+* Minor changes - error checks for some function calls
+* Using mapreduce to do stopword filtering / word replacement: http://jsperf.com/regex-replace-vs-indexof
 
 *v0.0.22*
 * Added `.fn` function. Similar to `.cache`, `.fn` function allows the user to send custom functions to all the Mappers and Reducers.

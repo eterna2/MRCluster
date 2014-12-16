@@ -20,6 +20,7 @@ process.on('message', function (msg) {
 	if (msg.linebreak) ctx.linebreak = msg.linebreak;
 	if (msg.csv) ctx._csv = msg.csv;
 	if (msg.cache) ctx._cache = msg.cache;
+	if (msg.stopwords) ctx._stopwords = msg.stopwords;
     if (msg.mapperFunction) {
         eval(msg.mapperFunction);
         ctx._mapperFunction = mapper;
@@ -136,6 +137,7 @@ function initReduceTask(chunk) {
 	
 	
     for (var key in chunk) {
+		if (ctx._stopwords.indexOf(key)>=0) continue;
         res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
 	
