@@ -14,7 +14,7 @@ process.on('message', function (msg) {
         })
         return;
     }
-	if (msg.id) ctx.id = msg.id;
+	if (msg.id) ctx.id = parseInt(msg.id) || 0;
 	if (msg.map2disk) ctx.map2disk = msg.map2disk;
 	if (msg.reduce2disk) ctx.reduce2disk = msg.reduce2disk;
 	if (msg.linebreak) ctx.linebreak = msg.linebreak;
@@ -137,7 +137,7 @@ function initReduceTask(chunk) {
 	
 	
     for (var key in chunk) {
-		if (ctx._stopwords.indexOf(key)>=0) continue;
+		if (ctx._stopwords && ctx._stopwords.indexOf(key)>=0) continue;
         res[key] = (!res[key]) ? chunk[key] : reduce(res[key], chunk[key]);
     }
 	
@@ -167,6 +167,8 @@ function initReduceTask(chunk) {
             reduceDone: true
         });
     })
+
+	if (global.gc) global.gc();
 
 }
 

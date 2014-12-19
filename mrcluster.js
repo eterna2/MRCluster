@@ -149,6 +149,7 @@ function MapReduce() {
 		ctx._bin = new Array(ctx._numReducers);
 		ctx._answer = new Array(ctx._numReducers);
 		ctx._sortHash = _sortHash;
+		ctx._freeMappers = [];
 		
         if (ctx._cluster.isMaster) {
 		
@@ -170,7 +171,7 @@ function MapReduce() {
                 })
 				.on('online', function(worker){ 
 					worker.send({
-							id: worker.id,
+							id: worker.id-1,
 							mapperFunction: ctx._mapper,
 							combinerFunction: ctx._combiner || ctx._reducer,
 							reducerFunction: ctx._reducer,
@@ -270,7 +271,14 @@ function MapReduce() {
 		{
 			--ctx._jobsLeft;
 			console.log("Map Jobs Remaining: "+ctx._jobsLeft)
-			_startMapper(ctx,this.id);
+			if (!ctx._pauseMappers) 
+			{
+				_startMapper(ctx,this.id);
+			}
+			else
+			{
+				ctx._freeMappers.push(this.id);
+			}
 
 			if (ctx._mapOnly && ctx._jobsLeft == 0) 
 			{
@@ -284,21 +292,38 @@ function MapReduce() {
         }
 		else if (msg.reduceDone) 
 		{
-			console.log("Reducer#"+(this.id-1)+" Done. Reduce Jobs Remaining: "+ctx._reducJobsLeft)
+			console.log("Reducer#"+(this.id-1)+" Done. Reduce Jobs Remaining: "+ctx._reducJobsLeftArray)
 			ctx._reducerState[this.id-1] = false;
 			_startReducer(ctx,this.id-1,ctx._bin[this.id-1].pop());
         }
 
 		//console.log(ctx._reducerState)
-		var _bin = ctx._bin, reduceJobsLeft = 0;
+		var _bin = ctx._bin, reduceJobsLeft = 0, reduceJobLeftArray = new Array(ctx._numReducers);
 		for (var hash in _bin)
 		{
 			if (!ctx._reducerState[hash]) _startReducer(ctx,hash,_bin[hash].pop());
 			reduceJobsLeft += _bin[hash].length;
+			reduceJobLeftArray[hash] = _bin[hash].length;
 		}
 		ctx._reducJobsLeft = reduceJobsLeft;
+		ctx._reducJobsLeftArray = reduceJobLeftArray;
 		var reducerDone = ctx._reducerState.every(function(d){return !d;});
 		if (reducerDone && ctx._jobsLeft == 0 && reduceJobsLeft == 0) _compileResult(ctx);
+		
+		var memUsage = process.memoryUsage().heapUsed/1048576;
+		
+		if (!ctx._pauseMappers && memUsage > 300) 
+		{
+			console.log("[Master] V8 HeapUsed: "+memUsage.toFixed(0)+" Mb. Mappers SLEEP.")
+			ctx._pauseMappers = true;
+		}
+		else if (ctx._pauseMappers && ((memUsage < 150)||(reduceJobsLeft <= 1))) 
+		{
+			console.log("[Master] V8 HeapUsed: "+memUsage.toFixed(0)+" Mb. Mappers WAKE.")
+			ctx._pauseMappers = false;
+			ctx._freeMappers.forEach(function(id){_startMapper(ctx,id);});
+			ctx._freeMappers = [];
+		}
     };
 
     return ctx;
