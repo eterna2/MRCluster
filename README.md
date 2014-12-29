@@ -1,9 +1,11 @@
-MapReduce Cluster (MRCluster)
+# Node [mrcluster](https://www.npmjs.org/package/mrcluster)
 ==============
 
 A single node multi-core pseudo-MapReduce implementation on NodeJS. Input files are automatically broken into blocks and distributed to the Mappers and Reducers. 
 
 Examples of implementations can be found in the README.
+
+[![NPM](https://nodei.co/npm/mrcluster.png?downloadRank=true&downloads=true)](https://nodei.co/npm/mrcluster.png?downloadRank=true&downloads=true)
 
 ### Installation
 ```
