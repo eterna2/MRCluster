@@ -5,6 +5,25 @@ const _reducer = "var reducer=function(a, b){return b;};";
 const _post_reducer = "var post_reducer=function(chunk){var count = 0;for (var key in chunk)++count;console.log(count);return count;};";
 const _hash = "var hash=function(value){ value=value.toString(); var hash=0, i, chr, len; if (value.length==0) return hash; for (i = 0, len = value.length; i < len; i++) { chr = value.charCodeAt(i);hash = ((hash << 5) - hash) + chr; hash |= 0;  };  return Math.abs(hash%3);};";
 
+function djb2(str) { var hash = 5381,i = str.length; while(i) hash = (hash * 33) ^ str.charCodeAt(--i); return hash >>> 0;}
+
+function sdbm(str)
+{
+	var hash = 0, i = str.length;
+
+	while(i) hash = str.charCodeAt(--i) + (hash << 6) + (hash << 16) - hash;
+
+	return hash >>> 0;}
+	
+function loselose(str)
+{
+	var hash = 0, i = str.length;
+
+	while(i) hash += str.charCodeAt(--i);
+
+	return hash >>> 0;}
+	
+
 function genHashFunction(numHash)
 {
 	return "var hash=function(value){ value=value.toString(); var hash=0, i, chr, len; if (value.length==0) return hash; for (i = 0, len = value.length; i < len; i++) { chr = value.charCodeAt(i);hash = ((hash << 5) - hash) + chr; hash |= 0;  };  return Math.abs(hash%"+Math.max(1,parseInt(numHash))+");};";
